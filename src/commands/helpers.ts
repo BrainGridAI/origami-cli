@@ -94,7 +94,9 @@ export function renderRun(ctx: CliContext, run: Run): void {
 
   const status = run.status;
   const badge = status === "completed" ? color.green(status) : color.yellow(status);
-  writeOut(`${color.bold("Run")} ${run.id}  ${badge}  ${color.dim(`(${run.steps.completed}/${run.steps.max} steps, ${run.model})`)}`);
+  const steps = run.steps ? `${run.steps.completed}/${run.steps.max} steps` : "";
+  const meta = [steps, run.model].filter(Boolean).join(", ");
+  writeOut(`${color.bold("Run")} ${run.id}  ${badge}${meta ? `  ${color.dim(`(${meta})`)}` : ""}`);
 
   const resp = run.response;
   if (resp?.text) {
