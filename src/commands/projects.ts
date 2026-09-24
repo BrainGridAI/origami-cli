@@ -28,7 +28,7 @@ export function registerProjectsCommands(program: Command): void {
   const projects = program
     .command("projects")
     .aliases(["project", "p"])
-    .description("Projects (child orgs) — managed from the parent org");
+    .description("Projects (child orgs), v2 (prefer `origami account projects`)");
 
   projects
     .command("list", { isDefault: true })
