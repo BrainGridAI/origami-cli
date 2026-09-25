@@ -1,0 +1,15 @@
+name: Feature request
+description: A workflow the CLI makes harder than it should.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The job, not the solution. What do you run today, and where does it get in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would help?

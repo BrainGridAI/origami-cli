@@ -1,0 +1,36 @@
+name: Bug report
+description: A command did the wrong thing, crashed, or printed something wrong.
+labels: [bug]
+body:
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact command you ran. Redact your API key and any ids you'd rather not share.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Paste the output. Re-running with `--debug` adds the HTTP calls to stderr (the key is never logged).
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: origami --version
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: node --version and OS

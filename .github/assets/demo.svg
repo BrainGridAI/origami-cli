@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="410" viewBox="0 0 760 410" role="img" aria-label="origami-cli: a launch dry-run catches a missing template"><title>origami-cli: a launch dry-run catches a missing template</title>
+  <rect width="760" height="410" rx="12" fill="#0D1117"/>
+  <path d="M0 12A12 12 0 0 1 12 0H748A12 12 0 0 1 760 12V36H0Z" fill="#161B22"/>
+  <rect x="0.5" y="0.5" width="759" height="409" rx="11.5" fill="none" stroke="#30363D"/>
+  <circle cx="22" cy="18" r="6" fill="#FF5F57"/><circle cx="42" cy="18" r="6" fill="#FEBC2E"/><circle cx="62" cy="18" r="6" fill="#28C840"/>
+  <g font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="13.5">
+  <text x="22" y="64" xml:space="preserve"><tspan fill="#E4572E">$ </tspan><tspan fill="#E6EDF3">origami send campaigns launch 3f1c9b2a --dry-run</tspan></text>
+  <text x="22" y="86" xml:space="preserve"><tspan fill="#7D8590">object            </tspan><tspan fill="#E6EDF3">launch_preview</tspan></text>
+  <text x="22" y="108" xml:space="preserve"><tspan fill="#7D8590">would_launch      </tspan><tspan fill="#F85149">false</tspan></text>
+  <text x="22" y="130" xml:space="preserve"><tspan fill="#7D8590">blockers          </tspan><tspan fill="#E6EDF3">{"code":"NO_STEPS","message":"The template has no steps</tspan></text>
+  <text x="22" y="152" xml:space="preserve"><tspan fill="#7D8590">                  </tspan><tspan fill="#E6EDF3">  - write it first (PUT .../templates)"}</tspan></text>
+  
+  <text x="22" y="196" xml:space="preserve"><tspan fill="#E4572E">$ </tspan><tspan fill="#E6EDF3">origami send campaigns templates put 3f1c9b2a --data @template.json</tspan></text>
+  <text x="22" y="218" xml:space="preserve"><tspan fill="#7D8590">object            </tspan><tspan fill="#E6EDF3">message_template</tspan></text>
+  <text x="22" y="240" xml:space="preserve"><tspan fill="#7D8590">sequences         </tspan><tspan fill="#E6EDF3">{"variant_key":"v1","steps":[…3 steps]}</tspan></text>
+  
+  <text x="22" y="284" xml:space="preserve"><tspan fill="#E4572E">$ </tspan><tspan fill="#E6EDF3">origami send campaigns launch 3f1c9b2a --dry-run</tspan></text>
+  <text x="22" y="306" xml:space="preserve"><tspan fill="#7D8590">would_launch      </tspan><tspan fill="#3FB950">true</tspan></text>
+  <text x="22" y="328" xml:space="preserve"><tspan fill="#7D8590">blockers          </tspan></text>
+  <text x="22" y="350" xml:space="preserve"><tspan fill="#7D8590">will_launch       </tspan><tspan fill="#E6EDF3">188</tspan></text>
+  <text x="22" y="372" xml:space="preserve"><tspan fill="#7D8590">held_back_total   </tspan><tspan fill="#E6EDF3">0</tspan></text>
+  </g></svg>

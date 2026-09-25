@@ -1,29 +1,73 @@
-# origami-cli
+<div align="center">
 
-A command-line interface for the [Origami API](https://docs.origami.chat/). Every
-[v3](https://docs.origami.chat/v3/overview) operation is a command (`send`, `leads`, `jobs`,
-`account`), generated from Origami's published OpenAPI spec. The v2 agent surface (`run`,
-`agents`, `tables`, …) is still here for brief-driven work.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/origami-cli-logo-dark.svg">
+  <img alt="origami-cli" src=".github/assets/origami-cli-logo-light.svg" height="56">
+</picture>
 
-```
-origami send campaigns launch <campaignId> --dry-run    # the gates a real launch would check
-origami leads searches create --brief "Heads of RevOps at US SaaS" --count 25 --wait
-origami run "Find 30 B2B SaaS founders in Austin who raised seed in 2025"   # v2 agent
-```
+<h3>The command line for the Origami API</h3>
+
+<p>Every <a href="https://docs.origami.chat/v3/overview">v3</a> operation is a command:
+campaigns, people, templates, leads, jobs, account.<br>
+Generated from Origami's published OpenAPI spec, so it covers the whole API and stays current.</p>
+
+<p>
+  <a href="https://www.npmjs.com/package/@braingrid/origami-cli"><img alt="npm" src="https://img.shields.io/npm/v/@braingrid/origami-cli?color=E4572E&label=npm"></a>
+  <a href="https://github.com/BrainGridAI/origami-cli/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/BrainGridAI/origami-cli/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
+  <img alt="Node 18+" src="https://img.shields.io/badge/node-%E2%89%A518-339933?logo=node.js&logoColor=white">
+  <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178C6?logo=typescript&logoColor=white">
+</p>
+
+<p>
+  <a href="#install">Install</a> ·
+  <a href="#quickstart">Quickstart</a> ·
+  <a href="#v3-send-leads-jobs-account">Commands</a> ·
+  <a href="https://docs.origami.chat/">Origami docs</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+<p><sub>Built by the team behind <a href="https://www.braingrid.ai/?ref=origami-cli">BrainGrid</a>,
+<a href="https://www.plansmith.co/?ref=origami-cli">Plansmith</a> and
+<a href="https://www.radial.build/?ref=origami-cli">Radial</a>.</sub></p>
+
+<img alt="A launch dry-run reports a missing template; after writing it, the dry-run passes for 188 people" src=".github/assets/demo.svg" width="760">
+
+</div>
+
+## Why origami-cli
+
+- **The whole API.** All 120 v3 operations are commands, built from
+  [Origami's OpenAPI spec](https://docs.origami.chat/openapi-v3.yaml). When Origami ships a
+  change, `pnpm sync:v3` regenerates the catalog; nothing is hand-maintained.
+- **Checks before it sends.** Enum values and required fields are validated before any request
+  leaves your machine. `launch --dry-run` shows the exact blockers a real launch would hit.
+- **Safe to retry.** Every POST carries an `Idempotency-Key` that is reused across automatic
+  retries, so a flaky network never launches a campaign or enrolls a list twice.
+- **Built for scripts.** JSON when piped, tables in a terminal, CSV on request. `--all` follows
+  cursors to the end, and data goes to stdout while progress goes to stderr.
+- **Async done right.** Anything that returns a Job takes `--wait`, which polls on the Job's own
+  `next_poll_at`. `origami jobs wait <id>` picks up any Job later.
 
 ## Install
 
 ```bash
-# from source (this repo)
-pnpm install
-pnpm build
-npm link            # puts `origami` on your PATH
-
-# or run without installing
-node dist/index.js --help
+npm install -g @braingrid/origami-cli     # puts `origami` on your PATH
+npx @braingrid/origami-cli --help         # or run it without installing
 ```
 
-Requires Node.js 18+.
+Requires Node.js 18+. From source: `pnpm install && pnpm build && npm link`.
+
+## Quickstart
+
+```bash
+origami auth login                                          # paste an og_live_… key
+origami send campaigns list --status draft                  # what's waiting to go out
+origami send campaigns examples list <campaignId>           # the copy each person will get
+origami send campaigns launch <campaignId> --dry-run        # blockers + held-back counts
+origami send campaigns launch <campaignId>                  # go
+origami send campaigns stats <campaignId>
+```
 
 ## Authenticate
 
@@ -301,6 +345,29 @@ pnpm build                # tsup → dist/index.js
 pnpm sync:v3              # regenerate src/v3/catalog.ts from the published v3 spec
 ```
 
+## Contributing
+
+Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, the test
+suite, and how the v3 catalog is regenerated. Please report security issues privately as
+described in [SECURITY.md](SECURITY.md).
+
+## Built by the team behind
+
+<p align="center">
+  <a href="https://www.braingrid.ai/?ref=origami-cli"><img alt="BrainGrid" src=".github/assets/braingrid-card.svg" height="64"></a>
+  &nbsp;
+  <a href="https://www.plansmith.co/?ref=origami-cli"><img alt="Plansmith" src=".github/assets/plansmith-card.svg" height="64"></a>
+  &nbsp;
+  <a href="https://www.radial.build/?ref=origami-cli"><img alt="Radial" src=".github/assets/radial-card.svg" height="64"></a>
+</p>
+
+<p align="center"><sub>
+<a href="https://www.braingrid.ai/?ref=origami-cli">BrainGrid</a>: the app builder that plans before it builds ·
+<a href="https://www.plansmith.co/?ref=origami-cli">Plansmith</a>: the planning agent for the business side of software ·
+<a href="https://www.radial.build/?ref=origami-cli">Radial</a>: the issue tracker for coding agents
+</sub></p>
+
 ## License
 
-MIT
+[MIT](LICENSE). origami-cli is an independent project and is not affiliated with or endorsed by
+Origami. "Origami" is a trademark of its owner.
