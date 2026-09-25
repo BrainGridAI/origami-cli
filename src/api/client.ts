@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import {
   OrigamiApiError,
   OrigamiNetworkError,
@@ -721,7 +723,7 @@ export class OrigamiClient {
   async requestV3(request: V3Request): Promise<V3Response> {
     const headers: Record<string, string> = { ...request.headers };
     if (request.method === "POST" && !Object.keys(headers).some((h) => h.toLowerCase() === "idempotency-key")) {
-      headers["idempotency-key"] = request.idempotencyKey ?? crypto.randomUUID();
+      headers["idempotency-key"] = request.idempotencyKey ?? randomUUID();
     }
     const options: RequestOptions = {
       method: request.method,

@@ -1,0 +1,37 @@
+name: Sync v3 spec
+
+# Weekly: regenerate src/v3/catalog.ts from Origami's published OpenAPI spec and open a
+# pull request when it changed, so new operations become commands without anyone noticing
+# the API moved.
+on:
+  schedule:
+    - cron: "0 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm sync:v3
+      - run: pnpm typecheck && pnpm test
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/sync-v3-spec
+          commit-message: "Sync v3 catalog with Origami's published spec"
+          title: "Sync v3 catalog with Origami's published spec"
+          body: |
+            `pnpm sync:v3` produced a different `src/v3/catalog.ts`: Origami changed its
+            v3 API. Typecheck and tests passed on the regenerated catalog. Review the diff
+            for renamed or removed operations before merging.
+          labels: spec-sync

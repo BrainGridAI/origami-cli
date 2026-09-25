@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Origami API questions
+    url: https://docs.origami.chat/
+    about: Questions about the Origami API itself (not this CLI) are answered in Origami's docs.
+  - name: Security vulnerability
+    url: https://github.com/BrainGridAI/origami-cli/security/advisories/new
+    about: Report security issues privately, never in a public issue.

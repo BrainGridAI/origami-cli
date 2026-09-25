@@ -1,10 +1,10 @@
 {
-  "name": "origami-cli",
+  "name": "@braingrid/origami-cli",
   "version": "0.2.0",
-  "description": "Command-line interface for the Origami API: every v3 operation (send, leads, jobs, account) generated from the published spec, plus the v2 agent surface.",
+  "description": "The command line for the Origami API: every v3 operation (send, leads, jobs, account) as a command, generated from the published spec.",
   "type": "module",
   "license": "MIT",
-  "author": "acossta <nico@braingrid.ai>",
+  "author": "BrainGrid (https://www.braingrid.ai)",
   "homepage": "https://github.com/BrainGridAI/origami-cli#readme",
   "repository": {
     "type": "git",
@@ -22,7 +22,10 @@
     "leads",
     "enrichment",
     "outreach",
-    "campaigns"
+    "campaigns",
+    "linkedin",
+    "sales",
+    "openapi"
   ],
   "bin": {
     "origami": "./dist/index.js"
@@ -30,8 +33,12 @@
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -45,7 +52,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "sync:v3": "node scripts/sync-v3-catalog.mjs",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "commander": "^12.1.0",
