@@ -13,6 +13,11 @@ pnpm dev -- send campaigns list --help    # run from source
 
 Node.js 18+ and pnpm 10 (`corepack enable` picks the pinned version).
 
+## Branches
+
+Open pull requests against **`dev`**. `main` holds released code only and is protected: it
+changes through a `dev` → `main` pull request at release time.
+
 ## Before you open a pull request
 
 ```bash
@@ -55,10 +60,10 @@ hand-written command next to the generated ones; keep those rare.
 
 ## Releasing (maintainers)
 
-1. Bump `version` in `package.json` and add a `CHANGELOG.md` entry.
-2. Merge to `main`.
-3. Publish a GitHub release tagged `vX.Y.Z`. The release workflow publishes to npm with
-   provenance.
+1. On `dev`: bump `version` in `package.json` and add a `CHANGELOG.md` entry.
+2. Open a `dev` → `main` pull request; merge it once CI is green.
+3. Publish a GitHub release tagged `vX.Y.Z` on `main`. The release workflow publishes to npm
+   with provenance.
 
 By contributing you agree that your contributions are licensed under the [MIT License](LICENSE)
 and that you'll follow the [Code of Conduct](CODE_OF_CONDUCT.md).
