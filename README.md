@@ -1,13 +1,14 @@
 # origami-cli
 
-A comprehensive command-line interface for the [Origami API v2](https://docs.origami.chat/) —
-run Origami's agent from a plain-English brief and get back a **table**, read and write rows, upsert
-and enrich leads, manage campaigns and sequences, drive scheduled agents and projects, and check
-your account and credits.
+A command-line interface for the [Origami API](https://docs.origami.chat/). Every
+[v3](https://docs.origami.chat/v3/overview) operation is a command (`send`, `leads`, `jobs`,
+`account`), generated from Origami's published OpenAPI spec. The v2 agent surface (`run`,
+`agents`, `tables`, …) is still here for brief-driven work.
 
 ```
-origami run "Find 30 B2B SaaS founders in Austin who raised seed in 2025"
-# → creates an agent, polls it to completion, prints the resulting table
+origami send campaigns launch <campaignId> --dry-run    # the gates a real launch would check
+origami leads searches create --brief "Heads of RevOps at US SaaS" --count 25 --wait
+origami run "Find 30 B2B SaaS founders in Austin who raised seed in 2025"   # v2 agent
 ```
 
 ## Install
@@ -147,7 +148,66 @@ origami workspaces get <workspaceId>
 origami workspaces delete <workspaceId> [--confirm]
 ```
 
-### `campaigns`, `sequences`
+### v3: `send`, `leads`, `jobs`, `account`
+
+Each operation id is the command path: `send.campaigns.people.list` is
+`origami send campaigns people list`, `fetch_more` becomes `fetch-more`. A group whose only
+operation is `get` collapses into the group (`origami send campaigns stats <id>`), and an
+argument-free `get` is its group's default (`origami account`, `origami account credits`).
+
+```bash
+# The send recipe, in order
+origami send campaigns create --name "Q4 delivery leaders" --channels linkedin
+origami send campaigns people upsert <campaignId> --list-id <listId>
+origami send campaigns templates put <campaignId> --data @template.json
+origami send campaigns settings patch <campaignId> --no-auto-lead-refill-enabled --require-message-approval
+origami send campaigns senders add <campaignId> --sender-id <senderId>
+origami send campaigns examples list <campaignId>                # read the rendered copy per person
+origami send campaigns launch <campaignId> --dry-run             # blockers + held-back counts
+origami send campaigns launch <campaignId>
+origami send campaigns stats <campaignId>
+
+# Leads
+origami leads lists list
+origami leads lists rows list <listId> --all -o csv > rows.csv
+origami leads lists rows upsert <listId> --rows @rows.json --match-columns email
+origami leads searches create --brief "…" --count 25 --wait
+
+# Jobs: every 202 returns one; --wait on the command, or poll later
+origami jobs list --status running
+origami jobs wait <jobId>
+origami jobs input <jobId> --answers "Only Series A and later"
+
+# Account
+origami account senders list --channel linkedin
+origami account rate-limits
+origami account exclusion-lists people add --email someone@example.com
+```
+
+How flags map to the API:
+
+- Path parameters are positional arguments; query parameters and top-level body fields are
+  `--kebab-case` flags. `origami <command> --help` lists them with the spec's descriptions and
+  ends with the HTTP call and its docs page.
+- Booleans take `--flag` or `--no-flag` (sends `false`). Lists take commas or repeats
+  (`--ids a,b --ids c`). Object fields take JSON inline, `@file.json`, or `-` for stdin.
+- `--data <json|@file|->` supplies the whole body; flags override its keys. A body field that
+  would shadow a global option gets a `body-` prefix (`--body-fields`).
+- Enums and required fields are checked before any request is sent.
+- Every POST carries an `Idempotency-Key` (yours via `--idempotency-key`, else a UUID) that is
+  reused across automatic retries, so a retried launch or enrollment never runs twice.
+- List commands print one page and hint the cursor; `--all` follows `next_cursor` to the end.
+- Operations that return a Job accept `--wait` (polls on the Job's `next_poll_at`, default
+  ceiling 30 minutes, `--wait-timeout <s>` to change it).
+
+Regenerate the command catalog when Origami ships spec changes:
+
+```bash
+pnpm sync:v3              # fetches https://docs.origami.chat/openapi-v3.yaml → src/v3/catalog.ts
+pnpm sync:v3 ./spec.yaml  # or from a local copy
+```
+
+### `campaigns`, `sequences` (v2)
 
 ```bash
 origami campaigns list (--workspace <id> | --table <id>)
@@ -164,7 +224,7 @@ origami sequences stop <sequenceId> [--dry-run]
 origami sequences delete <sequenceId> [--force]
 ```
 
-### `scheduled`, `projects`, `account`
+### `scheduled`, `projects` (v2)
 
 ```bash
 origami scheduled list [--workspace <id>] [--enabled true|false]
@@ -177,8 +237,7 @@ origami projects create <name> [--monthly-credits <n>]
 origami projects update <id> [--name <n>] [--monthly-credits <n|null>]
 origami projects delete <id> [--confirm]
 
-origami account                                         # plan, capabilities, workspace usage
-origami credits                                         # credit balance
+origami credits                                         # credit balance (v3 shortcut)
 ```
 
 ### `webhooks` (local dev tools)
@@ -239,6 +298,7 @@ pnpm dev -- <args>        # run from source (tsx)
 pnpm typecheck            # tsc --noEmit
 pnpm test                 # vitest
 pnpm build                # tsup → dist/index.js
+pnpm sync:v3              # regenerate src/v3/catalog.ts from the published v3 spec
 ```
 
 ## License

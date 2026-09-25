@@ -87,10 +87,36 @@ export interface OrigamiClientOptions {
   sleep?: ((ms: number) => Promise<void>) | undefined;
 }
 
+export type V3QueryValue = string | number | boolean | Array<string | number> | undefined;
+
+export interface V3Request {
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  /** Path relative to /api/v3, already filled in (e.g. `/send/campaigns/abc/launch`). */
+  path: string;
+  query?: Record<string, V3QueryValue>;
+  body?: unknown;
+  headers?: Record<string, string>;
+  /** Idempotency key for POSTs; a UUID is generated when omitted. */
+  idempotencyKey?: string | undefined;
+  /** Send x-origami-project when a project is configured. Default true. */
+  project?: boolean;
+  signal?: AbortSignal | undefined;
+}
+
+export interface V3Response {
+  status: number;
+  /** Parsed JSON body, when the response was JSON. */
+  data: unknown;
+  /** Raw body, when the response was not JSON (e.g. CSV). */
+  text?: string;
+  contentType: string;
+  retryAfterMs: number | undefined;
+}
+
 interface RequestOptions {
   method: string;
   path: string;
-  query?: Record<string, string | number | boolean | undefined>;
+  query?: Record<string, V3QueryValue>;
   body?: unknown;
   /** Send Authorization header. Default true. */
   auth?: boolean;
@@ -678,6 +704,51 @@ export class OrigamiClient {
   }
 
   // -------------------------------------------------------------------------
+  // v3 (named operations; see src/v3)
+  // -------------------------------------------------------------------------
+
+  /** Base URL of the v3 API, derived from the configured base (`…/api/v2` → `…/api/v3`). */
+  get v3BaseUrl(): string {
+    return `${this.baseUrl.replace(/\/api\/v\d+$/, "")}/api/v3`;
+  }
+
+  /**
+   * Send one v3 request. JSON responses are parsed; anything else (e.g. `format=csv`
+   * row exports) comes back as text. Every POST carries an `Idempotency-Key` (the
+   * caller's, or a fresh UUID) that is reused across automatic retries, so a retried
+   * send or launch never runs twice.
+   */
+  async requestV3(request: V3Request): Promise<V3Response> {
+    const headers: Record<string, string> = { ...request.headers };
+    if (request.method === "POST" && !Object.keys(headers).some((h) => h.toLowerCase() === "idempotency-key")) {
+      headers["idempotency-key"] = request.idempotencyKey ?? crypto.randomUUID();
+    }
+    const options: RequestOptions = {
+      method: request.method,
+      path: this.v3BaseUrl + request.path,
+      query: request.query,
+      body: request.body,
+      headers,
+      project: request.project,
+      signal: request.signal,
+    };
+    const res = await this.send(options);
+    const retryAfterMs = retryAfterFromHeaders(res.headers);
+    if (!res.ok) throw await this.toApiError(options, res);
+    const contentType = res.headers.get("content-type") ?? "";
+    const text = res.status === 204 ? "" : await res.text();
+    if (!text) return { status: res.status, data: undefined, contentType, retryAfterMs };
+    if (contentType.includes("json") || /^[[{]/.test(text.trim())) {
+      try {
+        return { status: res.status, data: JSON.parse(text) as unknown, contentType, retryAfterMs };
+      } catch {
+        // fall through to text
+      }
+    }
+    return { status: res.status, data: undefined, text, contentType, retryAfterMs };
+  }
+
+  // -------------------------------------------------------------------------
   // Pagination helpers
   // -------------------------------------------------------------------------
 
@@ -845,7 +916,8 @@ export class OrigamiClient {
     if (!query) return base;
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(query)) {
-      if (value !== undefined) params.set(key, String(value));
+      if (value === undefined) continue;
+      params.set(key, Array.isArray(value) ? value.join(",") : String(value));
     }
     const qs = params.toString();
     return qs ? `${base}?${qs}` : base;
@@ -883,10 +955,15 @@ function enc(segment: string): string {
 }
 
 function parseRateLimit(headers: Headers): RateLimitInfo {
+  // v2 reports a `-global` bucket; v3 reports `-org`. Either falls back to the per-IP bucket.
   const limit =
-    numericHeader(headers, "x-ratelimit-limit-global") ?? numericHeader(headers, "x-ratelimit-limit-ip");
+    numericHeader(headers, "x-ratelimit-limit-global") ??
+    numericHeader(headers, "x-ratelimit-limit-org") ??
+    numericHeader(headers, "x-ratelimit-limit-ip");
   const remaining =
-    numericHeader(headers, "x-ratelimit-remaining-global") ?? numericHeader(headers, "x-ratelimit-remaining-ip");
+    numericHeader(headers, "x-ratelimit-remaining-global") ??
+    numericHeader(headers, "x-ratelimit-remaining-org") ??
+    numericHeader(headers, "x-ratelimit-remaining-ip");
   const retryAfterMs = retryAfterFromHeaders(headers);
   return {
     limit,

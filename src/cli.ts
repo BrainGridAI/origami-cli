@@ -9,7 +9,7 @@ import {
   OrigamiError,
   OrigamiNetworkError,
 } from "./api/errors.js";
-import { registerAccountCommands } from "./commands/account.js";
+import { registerCreditsShortcut } from "./commands/account.js";
 import { registerAgentsCommands } from "./commands/agents.js";
 import { registerAuthCommands } from "./commands/auth.js";
 import { registerCampaignsCommands } from "./commands/campaigns.js";
@@ -24,6 +24,7 @@ import { registerTablesCommands } from "./commands/tables.js";
 import { registerWebhooksCommands } from "./commands/webhooks.js";
 import { registerWorkspacesCommands } from "./commands/workspaces.js";
 import { color } from "./output/color.js";
+import { registerV3Commands, V3_SPEC_VERSION } from "./v3/commands.js";
 
 function readVersion(): string {
   try {
@@ -76,7 +77,9 @@ export function buildProgram(): Command {
 
   program
     .name("origami")
-    .description("Comprehensive command-line interface for the Origami API (v2)")
+    .description(
+      `Command-line interface for the Origami API: v3 (send, leads, jobs, account; spec ${V3_SPEC_VERSION}) plus the v2 agent surface`,
+    )
     .version(readVersion(), "-v, --version", "print the CLI version")
     .showHelpAfterError("(add --help for usage)");
 
@@ -103,18 +106,24 @@ Environment variables:
   ORIGAMI_CONFIG_DIR directory for the config file
   NO_COLOR           disable colored output
 
-Examples:
+Examples (v3):
+  origami send campaigns list --status active            campaigns by status
+  origami send campaigns templates get <campaignId>      read the copy people will receive
+  origami send campaigns launch <campaignId> --dry-run   the gates a real launch would check
+  origami leads searches create --brief "Heads of RevOps at US SaaS" --count 25 --wait
+  origami leads lists rows <listId> --all -o csv         export a list
+  origami jobs wait <jobId>                              poll any async Job to completion
+  origami account                                        org, plan, capabilities
+
+Examples (v2 agent surface):
   origami auth login                                     store your API key
   origami run "Find 30 B2B SaaS founders in Austin who raised seed in 2025"
-  origami run "Find 20 fintech CEOs" --model max --rows  poll + dump the table's rows
   origami tables rows <tableId> -o csv --out leads.csv   export a table to CSV
-  origami tables upsert <tableId> --match domain --row '{"domain":"acme.com"}'
-  origami campaigns create <tableId> "Warm intro to each founder about our API"
-  origami account                                        plan, capabilities, usage
 `,
   );
 
-  // Order: hero first, then nouns.
+  // Order: v3 sections first, then the v2 agent surface.
+  registerV3Commands(program);
   registerRunCommand(program);
   registerAgentsCommands(program);
   registerWorkspacesCommands(program);
@@ -125,7 +134,7 @@ Examples:
   registerSequencesCommands(program);
   registerScheduledCommands(program);
   registerProjectsCommands(program);
-  registerAccountCommands(program);
+  registerCreditsShortcut(program);
   registerWebhooksCommands(program);
   registerAuthCommands(program);
   registerConfigCommands(program);

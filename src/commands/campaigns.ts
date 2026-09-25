@@ -46,7 +46,7 @@ export function registerCampaignsCommands(program: Command): void {
   const campaigns = program
     .command("campaigns")
     .aliases(["campaign", "c"])
-    .description("Outreach campaigns — create (agentic), read, launch, pause, resume");
+    .description("Outreach campaigns, v2 agentic surface (prefer `origami send campaigns`)");
 
   campaigns
     .command("list")

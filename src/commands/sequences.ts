@@ -18,7 +18,7 @@ export function registerSequencesCommands(program: Command): void {
   const sequences = program
     .command("sequences")
     .aliases(["sequence", "seq"])
-    .description("Per-recipient outreach threads within campaigns");
+    .description("Per-recipient outreach threads, v2 (prefer `origami send campaigns people`)");
 
   sequences
     .command("list")
