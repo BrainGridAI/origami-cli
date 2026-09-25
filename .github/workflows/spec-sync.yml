@@ -25,7 +25,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm sync:v3
       - run: pnpm typecheck && pnpm test
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/sync-v3-spec
           commit-message: "Sync v3 catalog with Origami's published spec"
