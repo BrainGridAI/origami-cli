@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: dev
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -27,6 +29,7 @@ jobs:
       - run: pnpm typecheck && pnpm test
       - uses: peter-evans/create-pull-request@v7
         with:
+          base: dev
           branch: chore/sync-v3-spec
           commit-message: "Sync v3 catalog with Origami's published spec"
           title: "Sync v3 catalog with Origami's published spec"
