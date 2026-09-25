@@ -364,7 +364,7 @@ described in [SECURITY.md](SECURITY.md).
 <p align="center"><sub>
 <a href="https://www.braingrid.ai/?ref=origami-cli">BrainGrid</a>: the app builder that plans before it builds ·
 <a href="https://www.plansmith.co/?ref=origami-cli">Plansmith</a>: the planning agent for the business side of software ·
-<a href="https://www.radial.build/?ref=origami-cli">Radial</a>: the fast, CLI-first issue tracker
+<a href="https://www.radial.build/?ref=origami-cli">Radial</a>: the issue tracker for coding agents
 </sub></p>
 
 ## License
