@@ -568,7 +568,8 @@ export const V3_OPERATIONS: V3Operation[] = [
       {
         "name": "send_as_email",
         "required": false,
-        "kind": "string"
+        "kind": "string",
+        "description": "Removed. Mail always sends from the mailbox address: a non-empty value returns 400 SEND_AS_REMOVED, null is a no-op."
       },
       {
         "name": "daily_limit",
@@ -756,22 +757,6 @@ export const V3_OPERATIONS: V3Operation[] = [
       }
     ],
     "docs": "https://docs.origami.chat/v3/reference/account-senders-reconnect"
-  },
-  {
-    "id": "account.senders.send_as_aliases.list",
-    "method": "GET",
-    "path": "/account/senders/{sender_id}/send-as-aliases",
-    "summary": "List verified send-as aliases (empty for IMAP/LinkedIn senders)",
-    "tag": "account",
-    "params": [
-      {
-        "name": "sender_id",
-        "in": "path",
-        "required": true,
-        "kind": "string"
-      }
-    ],
-    "docs": "https://docs.origami.chat/v3/reference/account-senders-send-as-aliases-list"
   },
   {
     "id": "account.domains.search",
@@ -2339,7 +2324,7 @@ export const V3_OPERATIONS: V3Operation[] = [
     "id": "send.campaigns.pause",
     "method": "POST",
     "path": "/send/campaigns/{campaign_id}/pause",
-    "summary": "Pause an active campaign (idempotent)",
+    "summary": "Pause an active campaign (idempotent); a campaign that never launched is refused",
     "tag": "send",
     "params": [
       {
@@ -2406,7 +2391,8 @@ export const V3_OPERATIONS: V3Operation[] = [
       {
         "name": "channels",
         "required": false,
-        "kind": "list"
+        "kind": "list",
+        "description": "Only settable before the campaign has template steps. Once it does, the template's steps are the channel set: a matching set is accepted as a no-op, a different set is 400 VALIDATION_ERROR (change channels by rewriting the template via PUT /send/campaigns/:id/templates)"
       },
       {
         "name": "send_window",
@@ -2448,6 +2434,15 @@ export const V3_OPERATIONS: V3Operation[] = [
         "name": "block_already_connected",
         "required": false,
         "kind": "boolean"
+      },
+      {
+        "name": "cross_channel_fallback",
+        "required": false,
+        "kind": "string",
+        "enum": [
+          "use_other_sender",
+          "skip_channel"
+        ]
       }
     ],
     "bodyRequired": true,
@@ -2674,6 +2669,16 @@ export const V3_OPERATIONS: V3Operation[] = [
         "in": "path",
         "required": true,
         "kind": "string"
+      },
+      {
+        "name": "scope",
+        "in": "query",
+        "required": false,
+        "kind": "string",
+        "enum": [
+          "sequence",
+          "person"
+        ]
       }
     ],
     "docs": "https://docs.origami.chat/v3/reference/send-campaigns-people-get"
@@ -3019,6 +3024,11 @@ export const V3_OPERATIONS: V3Operation[] = [
         "name": "sign_off_phrase",
         "required": false,
         "kind": "string"
+      },
+      {
+        "name": "max_resync_people",
+        "required": false,
+        "kind": "integer"
       }
     ],
     "bodyRequired": true,
@@ -3085,6 +3095,11 @@ export const V3_OPERATIONS: V3Operation[] = [
         "name": "steps",
         "required": true,
         "kind": "json"
+      },
+      {
+        "name": "max_resync_people",
+        "required": false,
+        "kind": "integer"
       }
     ],
     "bodyRequired": true,
@@ -3135,6 +3150,11 @@ export const V3_OPERATIONS: V3Operation[] = [
         "name": "steps",
         "required": false,
         "kind": "json"
+      },
+      {
+        "name": "max_resync_people",
+        "required": false,
+        "kind": "integer"
       }
     ],
     "bodyRequired": true,
@@ -3158,6 +3178,12 @@ export const V3_OPERATIONS: V3Operation[] = [
         "in": "path",
         "required": true,
         "kind": "string"
+      },
+      {
+        "name": "max_resync_people",
+        "in": "query",
+        "required": false,
+        "kind": "integer"
       }
     ],
     "docs": "https://docs.origami.chat/v3/reference/send-campaigns-templates-sequences-delete"
@@ -3195,7 +3221,7 @@ export const V3_OPERATIONS: V3Operation[] = [
     "id": "send.campaigns.examples.generate",
     "method": "POST",
     "path": "/send/campaigns/{campaign_id}/examples",
-    "summary": "Generate per-person copy (one LLM call per person; async Job)",
+    "summary": "Generate per-person copy (one LLM call per person; async Job - an unscoped call renders the whole campaign)",
     "tag": "send",
     "params": [
       {
@@ -3283,5 +3309,94 @@ export const V3_OPERATIONS: V3Operation[] = [
     ],
     "bodyRequired": true,
     "docs": "https://docs.origami.chat/v3/reference/send-campaigns-approvals-approve"
+  },
+  {
+    "id": "send.replies.list",
+    "method": "GET",
+    "path": "/send/replies",
+    "summary": "Page historical outreach replies (plain body + campaign/sequence ids; defaults to from=lead)",
+    "tag": "send",
+    "params": [
+      {
+        "name": "cursor",
+        "in": "query",
+        "required": false,
+        "kind": "string"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "kind": "integer"
+      },
+      {
+        "name": "campaign_id",
+        "in": "query",
+        "required": false,
+        "kind": "string"
+      },
+      {
+        "name": "sequence_id",
+        "in": "query",
+        "required": false,
+        "kind": "string"
+      },
+      {
+        "name": "since",
+        "in": "query",
+        "required": false,
+        "kind": "string"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "kind": "string",
+        "enum": [
+          "lead",
+          "self"
+        ]
+      }
+    ],
+    "paginated": true,
+    "docs": "https://docs.origami.chat/v3/reference/send-replies-list"
+  },
+  {
+    "id": "send.sequences.messages.create",
+    "method": "POST",
+    "path": "/send/sequences/{sequence_id}/messages",
+    "summary": "Send one message into a sequence's existing email or LinkedIn thread, paced like a campaign send (refused with next_send_at when the account cannot send yet)",
+    "tag": "send",
+    "params": [
+      {
+        "name": "sequence_id",
+        "in": "path",
+        "required": true,
+        "kind": "string"
+      }
+    ],
+    "body": [
+      {
+        "name": "channel",
+        "required": true,
+        "kind": "string",
+        "enum": [
+          "email",
+          "linkedin"
+        ]
+      },
+      {
+        "name": "body",
+        "required": true,
+        "kind": "string"
+      },
+      {
+        "name": "stop_sequence",
+        "required": false,
+        "kind": "boolean"
+      }
+    ],
+    "bodyRequired": true,
+    "docs": "https://docs.origami.chat/v3/reference/send-sequences-messages-create"
   }
 ];
